@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package comm;
+
+// Service definition for the Mapper
+service MapperService {
+  // Sends input data to the mapper for processing
+  rpc SendInput(MapperInput) returns (MapperResponse);
+
+  // Retrieves processed data from the mapper for the reducer
+  rpc GetPartitionedData(GetPartitionedDataRequest) returns (PartitionResponse);
+
+}
+
+// Data structure for sending input to the mapper
+message MapperInput {
+  string input_file = 1;         // File path to read data points from
+  int32 num_reducers = 2;        // Number of reducers to partition data for
+  int32 mapper_index = 3;        // Index of the mapper
+  int32 iteration_number = 4;    // Current iteration number
+  repeated Point centroids = 5;  // List of centroids to use in clustering
+}
+
+
+// Response from the mapper after processing input
+message MapperResponse {
+  bool success = 1;           // Whether the processing was successful
+  string message = 2;         // Additional message about the processing result
+}
+
+// Request to get partitioned data from the mapper
+message GetPartitionedDataRequest {
+  int32 mapper_index = 1;     // Index of the mapper
+  int32 reducer_index = 2;    // Index of the reducer requesting the data
+}
+
+
+
+message DataEntry {
+  int32 id = 1;
+  repeated float values = 2;
+}
+
+message PartitionResponse {
+  repeated DataEntry entries = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+message Point {
+  float x = 1;
+  float y = 2;
+}
+
+// REDUCER
+
+service ReducerService {
+  rpc ProcessReduce(ReducerInput) returns (ReducerResponse);
+}
+
+message ReducerInput {
+  int32 iteration_number = 1;
+  int32 reducer_index = 2;
+  int32 num_mappers = 3;
+}
+
+// The response message containing the result of processing by the Reducer.
+message ReducerResponse {
+  bool success = 1;
+  string message = 2;
+}
